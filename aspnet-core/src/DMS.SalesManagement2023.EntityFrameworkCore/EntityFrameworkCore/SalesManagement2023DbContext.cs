@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DMS.SalesManagement2023.Categories;
+using DMS.SalesManagement2023.Products;
+using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -24,6 +26,9 @@ public class SalesManagement2023DbContext :
     ITenantManagementDbContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
+
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Category> Categories { get; set; }
 
     #region Entities from the modules
 
@@ -81,5 +86,26 @@ public class SalesManagement2023DbContext :
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+        builder.Entity<Category>(b =>
+        {
+            b.ToTable("Categories");
+            b.Property(x => x.Name)
+                .HasMaxLength(CategoryConsts.MaxNameLength)
+                .IsRequired();
+            b.HasIndex(x => x.Name);
+        });
+        builder.Entity<Product>(b =>
+        {
+            b.ToTable("Products");
+            b.Property(x => x.Name)
+                .HasMaxLength(ProductConsts.MaxNameLength)
+                .IsRequired();
+            b.HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.CategoryID)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+            b.HasIndex(x => x.Name).IsUnique();
+        });
     }
 }
